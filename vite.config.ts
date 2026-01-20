@@ -1,11 +1,18 @@
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 
 // https://vitejs.dev/config/
-export default defineConfig({
-  plugins: [react()],
-  define: {
-    // Defines process.env for the Google GenAI SDK which often expects it
-    'process.env': process.env
-  }
+export default defineConfig(({ mode }) => {
+  // Load env file based on `mode` in the current working directory.
+  // Set the third parameter to '' to load all env regardless of the `VITE_` prefix.
+  const env = loadEnv(mode, (process as any).cwd(), '');
+
+  return {
+    plugins: [react()],
+    define: {
+      // Safely replace process.env.API_KEY with the actual string value during build.
+      // This solves the "process is not defined" error without exposing unrelated env vars.
+      'process.env.API_KEY': JSON.stringify(env.API_KEY),
+    }
+  };
 });
